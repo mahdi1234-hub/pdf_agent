@@ -55,9 +55,11 @@ export async function POST(req: NextRequest) {
     let textContent = "";
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
-      const pdfData = await pdfParse(buffer);
-      textContent = pdfData.text;
+      const { PDFParse } = require("pdf-parse") as { PDFParse: new (opts: { data: Uint8Array }) => { load: () => Promise<void>; getText: () => Promise<{ text: string }> } };
+      const parser = new PDFParse({ data: new Uint8Array(buffer) });
+      await parser.load();
+      const result = await parser.getText();
+      textContent = result.text;
     } catch (e) {
       console.error("PDF parse error:", e);
       textContent = buffer.toString("utf-8");
